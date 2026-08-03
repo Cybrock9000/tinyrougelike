@@ -13,7 +13,7 @@ class projectile:
         self.dx = 0
         self.dy = 0
         self.remove = False
-        if self.type == 0 or self.type == 5:
+        if self.type == 0 or self.type == 5 or self.type == 7:
             self.lifespan = 60 #1 sec
         elif self.type == 1 or self.type == 3 or self.type == 4:
             self.lifespan = 120 #2 sec
@@ -22,34 +22,46 @@ class projectile:
         elif self.type == 6:
             self.lifespan = 6 #1/10th sec
         self.target = None
-        if self.type == 0:
+        if self.type == 0: #arcane
             self.image = BetterImage("resources/textures/projectiles/arcane.png", (self.x, self.y), scale, scale)
-        elif self.type == 1:
+            
+        elif self.type == 1: #fire
             self.image = BetterImage("resources/textures/projectiles/flame.png", (self.x, self.y), scale, scale)
-        elif self.type == 2:
+            
+        elif self.type == 2: # enemy shadow
             self.image = BetterImage("resources/textures/projectiles/Eshadow.png", (self.x, self.y), scale, scale)
 
             dx = playerpos[0] - self.x
             dy = playerpos[1] - self.y
             
             self.angle = M.degrees(M.atan2(dy, dx))
-        elif self.type == 3:
+            
+        elif self.type == 3: # arrow
             self.image = BetterImage("resources/textures/projectiles/arrow.png", (self.x, self.y), scale, scale)
             self.speed = 4*scale
 
             self.angle = pangel
-        elif self.type == 4:
+            
+        elif self.type == 4: # flaming projectile that was a flaming arrow but now is not
             self.image = BetterImage("resources/textures/projectiles/farrow.png", (self.x, self.y), scale, scale)
             self.speed = 4*scale
             self.angle = pangel
-        elif self.type == 5:
+            
+        elif self.type == 5: # rain
             self.image = BetterImage("resources/textures/projectiles/rain.png", (self.x, self.y), scale, scale)
-            self.speed = 2*scale
+            self.speed = R.randrange(1,6)*scale
             self.angle = 145
-        elif self.type == 6:
+            
+        elif self.type == 6: # rain splash
             self.image = BetterImage("resources/textures/projectiles/rsplash.png", (self.x, self.y), scale, scale)
             self.speed = 0 
             self.angle = 0
+            
+        elif self.type == 7: # shadow
+            self.image = BetterImage("resources/textures/projectiles/shadow.png", (self.x, self.y), scale, scale)
+            
+            self.angle = R.randrange(0,360)
+            self.speed = 2*scale
 
 
     def update(self,window,EnemyHandler,pHandler,WaveSys):
@@ -61,7 +73,7 @@ class projectile:
              self.lifespan -= 1
             
         self.draw(window)
-        if self.type == 0 or self.type == 2 or self.type == 3 or self.type == 4 or self.type == 5:
+        if self.type == 0 or self.type == 2 or self.type == 3 or self.type == 4 or self.type == 5 or self.type == 7:
             self.move(EnemyHandler,pHandler,WaveSys,self.type)
         elif self.type == 1:
             self.angle = R.randrange(0,360)
@@ -102,6 +114,8 @@ class projectile:
     def draw(self,window):
         if self.type == 3 or self.type == 4:
             self.image.rotate(-self.angle-270)
+        elif self.type == 7:
+            self.image.rotate(R.randrange(0,360))
         else:
             self.image.rotate(self.angle)
         self.image.draw(window)

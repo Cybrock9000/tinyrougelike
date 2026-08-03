@@ -21,6 +21,9 @@ class enemy:
         elif self.type == 2:
             self.image = BetterImage("resources/textures/enemies/forgotten/forgotten.png", (self.x, self.y), scale, scale)
             self.hitS = pg.mixer.Sound('resources/sounds/enemies/FHit.wav')
+        elif self.type == 3:
+            self.image = BetterImage("resources/textures/enemies/forgotten/forgotten.png", (self.x, self.y), 2*scale, 2*scale)
+            self.hitS = pg.mixer.Sound('resources/sounds/enemies/FHit.wav')
             
         
         self.speed = speed*scale
@@ -31,23 +34,32 @@ class enemy:
         self.mindistance = 10*scale
         
 
-    def update(self,window,playerpos,enemy_list,player,projectile_list,fireDamage,pHandler,waterDamage):
+    def update(self,window,playerpos,enemy_list,player,projectile_list,fireDamage,pHandler,waterDamage,lightDamage,shadowDamage,shadowOrbs):
         if self.health < 0:
+            for r in range(shadowOrbs):
+                if R.random() < 0.1:
+                    pHandler.add_projectile(projectile(self.scale,(self.x,self.y),None,0,7))
+                    
             self.remove = True
 
         if not self.type == 2:
             self.move(playerpos,enemy_list,player)
             
         self.draw(window)
+        
         if self.cooldown <= 0 and self.type == 2:
             self.cooldown = 60
             pHandler.add_projectile(projectile(self.scale,(self.x,self.y),playerpos,0,2))
+        elif self.cooldown <= 0 and self.type == 3:
+            self.cooldown = 20
+            pHandler.add_projectile(projectile(self.scale,(self.x,self.y),(R.randrange(0,400*self.scale),R.randrange(0,400*self.scale)),0,2))
         else:
             self.cooldown -= 1
+            
         for proj in projectile_list:
             if dist(self.x,self.y,proj.x,proj.y) <= 10*self.scale:
                 if proj.type == 0:
-                    self.health -= 2
+                    self.health -= 2+lightDamage
                     self.hitS.play()
                 elif proj.type == 1:
                     self.health -= 0.1+fireDamage
@@ -60,6 +72,9 @@ class enemy:
                     self.hitS.play()
                 elif proj.type == 6:
                     self.health -= 7+waterDamage
+                    self.hitS.play()
+                elif proj.type == 7:
+                    self.health -= 7+shadowDamage
                     self.hitS.play()
 
     def hit(self,pHandler,scale,wave):

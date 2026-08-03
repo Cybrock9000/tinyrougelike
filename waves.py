@@ -24,28 +24,34 @@ class Wavesystem:
 
 
 
-    def spawn_enemy(self, EnemyHandler):
+    def spawn_enemy(self, EnemyHandler,boss=False):
         pos = (R.randrange(0, 400) * self.scale,R.randrange(0, 400) * self.scale,)
 
-        etype = R.choice((0,1,2))
-        if self.wave > 10 and etype == 2:
-            EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (5+(1.125*self.wave)), 2))
-        elif self.wave > 5 and etype == 1:
-            EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (10+(1.125*self.wave)), 1))
+        if boss == True:
+            EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (5+(1.125*self.wave)), 0))
         else:
-            EnemyHandler.add_enemy(enemy(pos, self.scale, 0.5, (10+(1.125*self.wave))))
-            print(10+(1.125*self.wave))
+            etype = R.choice((0,1,2))
+            if self.wave > 10 and etype == 2:
+                EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (5+(1.125*self.wave)), 2))
+            elif self.wave > 5 and etype == 1:
+                EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (10+(1.125*self.wave)), 1))
+            else:
+                EnemyHandler.add_enemy(enemy(pos, self.scale, 0.5, (10+(1.125*self.wave))))
+                #print(10+(1.125*self.wave))
 
 
 
     def newWave(self, EnemyHandler, extraenemys):
-        self.totalspawn = int(5 * (1.15 ** self.wave)) + extraenemys
-        #print(self.totalspawn)
-        self.spawned = 0
-        self.inshop = False
+        if self.wave % 26 == 0: # 26 because of the thing earyer
+            self.spawn_enemy(EnemyHandler,True)
+        else:
+            self.totalspawn = int(5 * (1.15 ** self.wave)) + extraenemys
+            #print(self.totalspawn)
+            self.spawned = 0
+            self.inshop = False
 
-        while len(EnemyHandler.enemy_list) < self.spawnlimit and self.spawned < self.totalspawn:
-            self.spawn_enemy(EnemyHandler)
-            self.spawned += 1
+            while len(EnemyHandler.enemy_list) < self.spawnlimit and self.spawned < self.totalspawn:
+                self.spawn_enemy(EnemyHandler)
+                self.spawned += 1
 
         self.wave += 1

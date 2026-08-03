@@ -63,9 +63,15 @@ def menu():
 def racemenu(scale,window):
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
 
+    race = ''
+
     humanB = Button("resources/textures/ui/humanB.png", (5*scale, 5*scale), 2*scale, 2*scale)
     werewolfB = Button("resources/textures/ui/werewolfB.png", (40*scale, 5*scale), 2*scale, 2*scale)
-    
+    kitsuneB = Button("resources/textures/ui/kitsuneB.png", (75*scale, 5*scale), 2*scale, 2*scale)
+    vampireB = Button("resources/textures/ui/vampireB.png", (110*scale, 5*scale), 2*scale, 2*scale)
+    draiknikB = Button("resources/textures/ui/draiknikB.png", (145*scale, 5*scale), 2*scale, 2*scale)
+    voidwalkerB = Button("resources/textures/ui/voidwalkerB.png", (180*scale, 5*scale), 2*scale, 2*scale)
+
     running = True
     while running:
         for event in pg.event.get():
@@ -77,16 +83,38 @@ def racemenu(scale,window):
         
         humanB.draw(window)
         werewolfB.draw(window)
+        kitsuneB.draw(window)
+        vampireB.draw(window)
+        draiknikB.draw(window)
+        voidwalkerB.draw(window)
+
 
         if humanB.is_pressed():
             click.play()
             running = False
-        
+            race = 'human'
+            
+        if werewolfB.is_pressed():
+            click.play()
+            running = False
+            race = 'werewolf'
+
+        if kitsuneB.is_pressed():
+            click.play()
+            running = False
+            race = 'kitsune'
+
+        if voidwalkerB.is_pressed():
+            click.play()
+            running = False
+            race = 'voidwalker'
+
+
         pg.display.flip()
         
-    weaponmenu(scale,window)
+    weaponmenu(scale,window,race)
 
-def weaponmenu(scale,window):
+def weaponmenu(scale,window,race):
     font = pg.font.SysFont('Arial', 10*scale)
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
 
@@ -127,17 +155,20 @@ def weaponmenu(scale,window):
         
         pg.display.flip()
         
-    main(scale,window,weaponType)
+    main(scale,window,weaponType,race)
 
 
-def main(scale, window, weaponType):
+def main(scale, window, weaponType,race):
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
     font = pg.font.SysFont('Arial', 10*scale)
 
     # --------------== Inits ==-----------------------------------------------------------
 
-    bgm = pg.mixer.Sound(os.curdir +'/resources/music/Lost.wav')
-    channel = bgm.play(-1)
+    songend = pg.USEREVENT + 1
+
+    pg.mixer.music.set_endevent(songend)
+    pg.mixer.music.load("resources/music/Lost.wav")
+    pg.mixer.music.play()
     
     EnemyHandler = enemyHandler()
     pHandler = particalHandler()
@@ -154,15 +185,23 @@ def main(scale, window, weaponType):
     arcaneDelay = 0
     attackCount = 0
 
-    specialInventory = []
+
     arcaneBolts = 0
+    shadowOrbs = 0
     extraenemys = 0
     attackDist = 0
     fireDamage = 0
     waterDamage = 0
+    lightDamage = 0
+    shadowDamage = 0
+    lifeDamage = 0
     illusionistsCloak = False
     torch = 0
     rain = 0
+    luck = 0
+    luck2 = 0
+    prophecy = False
+    lifesteal = 0
 
 
     justopenedshop = False
@@ -183,13 +222,13 @@ def main(scale, window, weaponType):
     playerframes = []
     pFrame = 0
     panimtimer = 0
-    for i in range(10):
-        playerframes.append(BetterImage(f"resources/textures/races/human/base{i}.png", (0, 0), scale, scale))
-    arm = BetterImage("resources/textures/races/human/arm.png", (0, 0), scale, scale)
+    for i in range(11):
+        playerframes.append(BetterImage(f"resources/textures/races/{race}/base{i-1}.png", (0, 0), scale, scale))
+    arm = BetterImage(f"resources/textures/races/{race}/arm.png", (0, 0), scale, scale)
 
     sword = BetterImage(f"resources/textures/weapons/{weaponType}.png", (0, 0), scale, scale)
 
-    mapI = R.choice((1,2))
+    mapI = R.choice((1,2,3,4)) #randrange was not working right
     #print(mapI)
     mapP = BetterImage(f"resources/textures/maps/map{mapI}.png", (0, 0), scale, scale)
     
@@ -211,11 +250,11 @@ def main(scale, window, weaponType):
     WaveSys.newWave(EnemyHandler,extraenemys)
 
 
-    items =     ['requiem',                'gring',              'rring',      'bring',        'coin',  'arcaneB',                   'firestone',      'illusionistsCloak',        'torch',                            'waterbubble',               'waterbottle']
-    itemweights=(1,                         50,                   50,           50,             5,       10,                          10,               1,                          7,                                  7,                           3)
-    itemdesc1 = ['Summons The Mechanical', 'Emerald Ring',       'Ruby Ring',  'Saphire Ring', '',      'Arcane book',               'Firestone',      'Illusionists Cloak',       'Torch',                            'Water Bubble',              'Water Bottle']
-    itemdesc2 = ['Requem',                 '+1 Attack distance', '+5 Health',  '+5 speed',     '',      'Summons a arcane bolt',     '+10 Fire magic', '90% to block projectiles', 'Every attack has 25% chance',      '+1% to block Melee',        '+1 rain (1+Water dmg)']
-    itemdesc3 = ['Fire & Mech',            'on melee',           '',           '',             '',      'every 4 seconds (2+light)', '-33% health',    '10% to do double dmg',     'to summon fire bolt (7+Fire dmg)', '-2 Fire dmg, +2 water dmg', '-2 Fire dmg']
+    items =     ['requiem',                'gring',              'rring',       'bring',        'coin',      'arcaneB',                   'firestone',      'illusionistsCloak',        'torch',                            'waterbubble',                 'waterbottle',           'prophecy',          'fang',          'shardofdarkness']
+    itemweights=(1,                         50-luck-luck2,        50-luck-luck2, 50-luck-luck2,  5,           10-luck2,                    10-luck2,         1+luck,                     7,                                  7,                             3+luck,                  1,                   2+luck2,         1+luck+luck2)
+    itemdesc1 = ['Summons The Mechanical', 'Emerald Ring',       'Ruby Ring',   'Saphire Ring', '+1 luck',   'Arcane book',               'Firestone',      'Illusionists Cloak',       'Torch',                            'Water Bubble',                'Water Bottle',          'The Prophecy',      'Vampire Fang',  'Shard of Darkness']
+    itemdesc2 = ['Requem',                 '+1 Attack distance', '+5 Health',   '+5 speed',     '+5 Enemys', 'Summons a arcane bolt',     '+10 Fire magic', '90% to block projectiles', 'Every attack has 25% chance',      '+1% to block Melee (60%max)', '+1 rain (1+Water dmg)', '',                  '+1 lifesteal',  '+1 Shadow Orb']
+    itemdesc3 = ['Fire & Mech',            'on melee',           '',            '',             '',          'every 4 seconds (2+light)', '-33% health',    '10% to do double dmg',     'to summon fire bolt (7+Fire dmg)', '-2 Fire dmg, +2 water dmg',   '-2 Fire dmg',           '',                  '-50% health',   '']
     button1 = shopButton(items,itemweights, 1*scale, (100*scale,200*scale))
     button2 = shopButton(items,itemweights, 1*scale, (200*scale,200*scale))
     button3 = shopButton(items,itemweights, 1*scale, (300*scale,200*scale))
@@ -239,6 +278,35 @@ def main(scale, window, weaponType):
             button2.update(window, font,itemdesc1,itemdesc2,itemdesc3)
             button3.update(window, font,itemdesc1,itemdesc2,itemdesc3)
 
+            ht = font.render(f'Max Health: {maxhealth}',False,(255,0,0))
+            window.blit(ht,(10*scale,10*scale))
+            st = font.render(f'Speed: {speed}',False,(0,0,255))
+            window.blit(st,(10*scale,20*scale))
+            adt = font.render(f'Attack Dist: {attackDist}',False,(0,255,0))
+            window.blit(adt,(10*scale,30*scale))
+            lt = font.render(f'Luck: {luck}',False,(255,255,0))
+            window.blit(lt,(10*scale,40*scale))
+            ls = font.render(f'Lifesteal: {lifesteal}',False,(200,0,0))
+            window.blit(ls,(10*scale,50*scale))
+            fd = font.render(f'Fire Damage: {fireDamage}',False,(255,0,0))
+            window.blit(fd,(10*scale,60*scale))
+            wd = font.render(f'Water Damage: {waterDamage}',False,(0,0,255))
+            window.blit(wd,(10*scale,70*scale))
+            sd = font.render(f'Shadow Damage: {shadowDamage}',False,(100,100,100))
+            window.blit(sd,(10*scale,80*scale))
+            ld = font.render(f'Life Damage: {lifeDamage}',False,(0,255,0))
+            window.blit(ld,(10*scale,90*scale))
+            ee = font.render(f'Extra Enemys: {extraenemys}',False,(155,100,0))
+            window.blit(ee,(10*scale,100*scale))
+            ab = font.render(f'Arcane Bolts: {arcaneBolts}',False,(200,200,255))
+            window.blit(ab,(10*scale,110*scale))
+            rt = font.render(f'Rain: {rain}',False,(50,100,255))
+            window.blit(rt,(10*scale,120*scale))
+            tt = font.render(f'Torch: {torch}',False,(255,100,50))
+            window.blit(tt,(10*scale,130*scale))
+            so = font.render(f'Shadow Orbs: {shadowOrbs}',False,(100,100,100))
+            window.blit(so,(10*scale,140*scale))
+
 
             if button1.is_pressed('1') == True: 
                 
@@ -249,7 +317,12 @@ def main(scale, window, weaponType):
                 elif button1.item == 'gring':
                     attackDist += 1
                 elif button1.item == 'coin':
-                    pass
+                    if luck >= 15:
+                        luck2 +=1
+                        luck -= 1
+                    else:
+                        luck += 1
+                    extraenemys += 5
                 elif button1.item == 'arcaneB':
                     arcaneBolts += 1
                 elif button1.item == 'firestone':
@@ -262,13 +335,34 @@ def main(scale, window, weaponType):
                     fireDamage += 2
                 elif button1.item == 'waterbubble':
                     playerH.waterbubblechance += 0.01 #1%
-                    fireDamage -= 2
-                    waterDamage += 2
+                    if playerH.waterbubblechance >= 0.6: #60%
+                        playerH.waterbubblechance = 0.6
+                    if race == 'kitsune':
+                        fireDamage -= 5
+                        waterDamage += 1
+                    else:
+                        fireDamage -= 2
+                        waterDamage += 2
                     if fireDamage <= 0:
                         fireDamage = 0
                 elif button1.item == 'waterbottle':
                     rain += 1
-                    fireDamage -= 2
+                    if race == 'kitsune':
+                        fireDamage -= 5
+                    else:
+                        fireDamage -= 2
+                    if fireDamage <= 0:
+                        fireDamage = 0
+                elif button1.item == 'prophecy':
+                    prophecy = True
+                elif button1.item == 'fang':
+                    lifesteal += 1
+                    maxhealth = round(maxhealth-(maxhealth/2))
+                elif button1.item == 'shardofdarkness':
+                    shadowOrbs += 1
+                    if race == 'werewolf':
+                        lightDamage -= 2
+                        maxhealth -= 2
                     
                 #specialInventory.append(button1.item)
                 #print(specialInventory)
@@ -278,6 +372,7 @@ def main(scale, window, weaponType):
                 
                 px, py = 200*scale, 200*scale
                 playerH.health = maxhealth
+                pHandler.projectile_list = []
                 WaveSys.newWave(EnemyHandler,extraenemys)
 
             elif button2.is_pressed('2') == True:
@@ -288,22 +383,52 @@ def main(scale, window, weaponType):
                     speed += 5
                 elif button2.item == 'gring':
                     attackDist += 1
+                elif button2.item == 'coin':
+                    if luck >= 15:
+                        luck2 +=1
+                        luck -= 1
+                    else:
+                        luck += 1
+                    extraenemys += 5
                 elif button2.item == 'arcaneB':
                     arcaneBolts += 1
                 elif button2.item == 'firestone':
                     maxhealth = round(maxhealth-(maxhealth/3))
                     fireDamage += 10
+                    shadowDamage -= 10
+                    if shadowDamage <= 0:
+                        shadowDamage = 0
                 elif button2.item == 'illusionistsCloak':
                     illusionistsCloak = True
                 elif button2.item == 'torch':
                     torch += 1
                     fireDamage += 2
+                    shadowDamage -= 2
+                    if shadowDamage <= 0:
+                        shadowDamage = 0
                 elif button2.item == 'waterbubble':
                     playerH.waterbubblechance += 0.01 
+                    if playerH.waterbubblechance >= 0.6:
+                        playerH.waterbubblechance = 0.6
                     fireDamage -= 2
                     waterDamage += 2
                     if fireDamage <= 0:
                         fireDamage = 0
+                elif button2.item == 'waterbottle':
+                    rain += 1
+                    fireDamage -= 2
+                    if fireDamage <= 0:
+                        fireDamage = 0
+                elif button2.item == 'prophecy':
+                    prophecy = True
+                elif button2.item == 'fang':
+                    lifesteal += 1
+                    maxhealth = round(maxhealth-(maxhealth/2))
+                elif button2.item == 'shardofdarkness':
+                    shadowOrbs += 1
+                    if race == 'werewolf':
+                        lightDamage -= 2
+                        maxhealth -= 2
                     
                 #specialInventory.append(button2.item)
                 WaveSys.inshop = False
@@ -311,6 +436,7 @@ def main(scale, window, weaponType):
                 playerH.health = maxhealth
                 click.play()
                 px, py = 200*scale, 200*scale
+                pHandler.projectile_list = []
                 WaveSys.newWave(EnemyHandler,extraenemys)
 
             elif button3.is_pressed('3') == True:
@@ -321,22 +447,52 @@ def main(scale, window, weaponType):
                     speed += 5
                 elif button3.item == 'gring':
                     attackDist += 1
+                elif button3.item == 'coin':
+                    if luck >= 15:
+                        luck2 +=1
+                        luck -= 1
+                    else:
+                        luck += 1
+                    extraenemys += 5
                 elif button3.item == 'arcaneB':
                     arcaneBolts += 1
                 elif button3.item == 'firestone':
                     maxhealth = round(maxhealth-(maxhealth/3))
                     fireDamage +=10
+                    shadowDamage -= 10
+                    if shadowDamage <= 0:
+                        shadowDamage = 0
                 elif button3.item == 'illusionistsCloak':
                     illusionistsCloak = True
                 elif button3.item == 'torch':
                     torch += 1
                     fireDamage += 2
+                    shadowDamage -= 10
+                    if shadowDamage <= 0:
+                        shadowDamage = 0
                 elif button3.item == 'waterbubble':
                     playerH.waterbubblechance += 0.01 
+                    if playerH.waterbubblechance >= 0.6:
+                        playerH.waterbubblechance = 0.6
                     fireDamage -= 2
                     waterDamage += 2
                     if fireDamage <= 0:
                         fireDamage = 0
+                elif button3.item == 'waterbottle':
+                    rain += 1
+                    fireDamage -= 2
+                    if fireDamage <= 0:
+                        fireDamage = 0
+                elif button3.item == 'prophecy':
+                    prophecy = True
+                elif button3.item == 'fang':
+                    lifesteal += 1
+                    maxhealth = round(maxhealth-(maxhealth/2))
+                elif button3.item == 'shardofdarkness':
+                    shadowOrbs += 1
+                    if race == 'werewolf':
+                        lightDamage -= 2
+                        maxhealth -= 2
 
                 #specialInventory.append(button3.item)
                 WaveSys.inshop = False
@@ -344,6 +500,7 @@ def main(scale, window, weaponType):
                 playerH.health = maxhealth
                 click.play()
                 px, py = 200*scale, 200*scale
+                pHandler.projectile_list = []
                 WaveSys.newWave(EnemyHandler,extraenemys)
             
 
@@ -361,6 +518,17 @@ def main(scale, window, weaponType):
             if event.type == pg.KEYDOWN:
                 if pg.key.name(event.key) == "escape":
                     running = False
+
+            if event.type == songend:
+                if prophecy:
+                    if R.random() < 0.1:
+                        pg.mixer.music.load("resources/music/ShatteredVoid.wav")
+                    else:
+                        pg.mixer.music.load("resources/music/Shattered.wav")
+                else:
+                    pg.mixer.music.load("resources/music/Lost.wav")
+
+                pg.mixer.music.play()
 
         keys = pg.key.get_pressed()
         if not WaveSys.inshop:
@@ -439,8 +607,8 @@ def main(scale, window, weaponType):
                 if panimtimer >= speed/20:
                     panimtimer = 0
                     pFrame += 1
-                    if pFrame >= 10:
-                        pFrame = 0
+                    if pFrame >= 11:
+                        pFrame = 1
                 else:
                     panimtimer += 1
             else:
@@ -469,7 +637,7 @@ def main(scale, window, weaponType):
             sword.rotate(-angledeg + 90)
             sword.draw(window)
             
-            EnemyHandler.update(window,(px,py),playerH,pHandler.projectile_list,fireDamage,pHandler,waterDamage)
+            EnemyHandler.update(window,(px,py),playerH,pHandler.projectile_list,fireDamage,pHandler,waterDamage,lightDamage,shadowDamage,shadowOrbs)
 
 
             for proj in pHandler.projectile_list:
@@ -484,7 +652,7 @@ def main(scale, window, weaponType):
             if slash:
                 if not attacked:
                     attacked = True
-                    attack(window, ax, ay, -angledeg-90, EnemyHandler,scale,pHandler,EnemyHandler,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch)
+                    attack(window, ax, ay, -angledeg-90, EnemyHandler,scale,pHandler,EnemyHandler,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch,luck,lifesteal)
 
                 frame = int(s)
 
@@ -530,7 +698,7 @@ def main(scale, window, weaponType):
 
 
 
-def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch): #looks familiar
+def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch,luck,lifesteal): #looks familiar
     
     if weaponType == 'sword':
         
@@ -551,6 +719,9 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
                 if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
                     enemy.health -= 1    
                     enemy.hit(pHandler,scale,WaveSys)
+                    if R.random() <= lifesteal:
+                        if playerH.health <= maxhealth:
+                            playerH.health += 1
                     
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -575,6 +746,9 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
                 if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
                     enemy.health -= 2
                     enemy.hit(pHandler,scale,WaveSys)
+                    if R.random() <= lifesteal:
+                        if playerH.health <= maxhealth:
+                            playerH.health += 1
                             
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -599,6 +773,9 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
                 if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
                     enemy.health -= 1
                     enemy.hit(pHandler,scale,WaveSys)
+                    if R.random() <= lifesteal:
+                        if playerH.health <= maxhealth:
+                                playerH.health += 1
                                 
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -609,6 +786,7 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
         for torchitem in range(torch):
             if R.random() < 0.25:
                 pHandler.add_projectile(projectile(scale,(px,py),None,(-pa+90)+R.randrange(-45,45),4))
+
                 
         for ray in range(20):
                 
@@ -617,7 +795,7 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
             dx = M.sin(rayangle)
             dy = M.cos(rayangle)
                 
-            sx, sy = (px + dx * 60*scale,py + dy * 60*scale)
+            sx, sy = (px + dx * (80+attackDist)*scale,py + dy * (80+attackDist)*scale)
                             
             for enemy in EnemyHandler.enemy_list:
                 if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
@@ -625,8 +803,9 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
                     if playerH.health <= maxhealth:
                         playerH.health += 1
                     enemy.hit(pHandler,scale,WaveSys)
+
                                     
-            #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
+            pg.draw.line(window, "red", (px, py),(sx, sy), 2)
 
 
 
@@ -643,15 +822,21 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
             dx = M.sin(rayangle)
             dy = M.cos(rayangle)
                     
-            sx, sy = (px + dx * 60*scale,py + dy * 60*scale)
-            sx2, sy2 = (px + dx * R.randrange(1,60)*scale,py + dy * R.randrange(1,60) *scale)
-            
-            pHandler.add_projectile(projectile(scale,(sx2,sy2),None,0,1))
+            sx, sy = (px + dx * (60+attackDist)*scale,py + dy * (60+attackDist)*scale)
+            sx2, sy2 = (px + dx * R.randrange(1,60+attackDist)*scale,py + dy * R.randrange(1,60+attackDist) *scale)
+
+            if R.random() <= 0.25+(luck/100):
+                pHandler.add_projectile(projectile(scale,(sx2,sy2),None,0,1))
+            if R.random() <= 0.25+(luck/100):
+                pHandler.add_projectile(projectile(scale,(sx,sy),None,0,1))
                                 
             for enemy in EnemyHandler.enemy_list:
                 if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
                     enemy.health -= 1 + fireDamage
                     enemy.hit(pHandler,scale,WaveSys)
+                    if R.random() <= lifesteal:
+                        if playerH.health <= maxhealth:
+                            playerH.health += 1
                                         
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
