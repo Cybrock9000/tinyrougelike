@@ -20,6 +20,7 @@ from particals import *
 from player import Player
 import random as R
 from projectiles import *
+from pets import pet
 
 
 def menu():
@@ -29,8 +30,9 @@ def menu():
     
 
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
+    click.set_volume(0.35)
     
-    scale = 2 #yes its pixel accurate, games with pixel art that isnt pixel accurate anoy me
+    scale = 1 #yes its pixel accurate, games with pixel art that isnt pixel accurate anoy me
     window = pg.display.set_mode((400*scale, 400*scale+50), pg.NOFRAME)
 
     start = Button("resources/textures/ui/start.png", (168*scale, 284*scale), 2*scale, 2*scale)
@@ -48,8 +50,8 @@ def menu():
         
         
         start.draw(window)
-        fpsT = font.render(f'Game, Music and Art by Cy',False,(255,255,255))
-        window.blit(fpsT,(150*scale,410*scale))
+        fpsT = font.render(f'Game, Music and Art by CyberWolf Games',False,(255,255,255))
+        window.blit(fpsT,(125*scale,410*scale))
 
         if start.is_pressed():
             click.play()
@@ -62,6 +64,7 @@ def menu():
 
 def racemenu(scale,window):
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
+    click.set_volume(0.35)
 
     race = ''
 
@@ -117,6 +120,7 @@ def racemenu(scale,window):
 def weaponmenu(scale,window,race):
     font = pg.font.SysFont('Arial', 10*scale)
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
+    click.set_volume(0.35)
 
     weapons =   ['sword',       'rapier',       'greatsword',               'cysfang',          'kaen',            'arcanestaff',       'crossbow']
     itemdesc1 = ['The Classic', 'The Rapier,',  'Greatsword',               'Cy`s Fang,',       'Phoenix Katana,', 'Arcane Staff,',     'Crossbow']
@@ -160,6 +164,7 @@ def weaponmenu(scale,window,race):
 
 def main(scale, window, weaponType,race):
     click = pg.mixer.Sound('resources/sounds/ui/click.wav')
+    click.set_volume(0.35)
     font = pg.font.SysFont('Arial', 10*scale)
 
     # --------------== Inits ==-----------------------------------------------------------
@@ -168,6 +173,7 @@ def main(scale, window, weaponType,race):
 
     pg.mixer.music.set_endevent(songend)
     pg.mixer.music.load("resources/music/Lost.wav")
+    pg.mixer.music.set_volume(0.5)
     pg.mixer.music.play()
     
     EnemyHandler = enemyHandler()
@@ -184,25 +190,68 @@ def main(scale, window, weaponType,race):
     attacked = False
     arcaneDelay = 0
     attackCount = 0
+    attacking = 90
+    a = 0
+    shake = (0,0)
+    
+    moonphase = 6 #new moon
 
 
     arcaneBolts = 0
-    shadowOrbs = 0
+    if not race == 'voidwalker':
+        shadowOrbs = 0
+    else:
+        shadowOrbs = 3
     extraenemys = 0
     attackDist = 0
-    fireDamage = 0
-    waterDamage = 0
-    lightDamage = 0
-    shadowDamage = 0
+    if not race == 'kitsune':
+        fireDamage = 0
+    else:
+        fireDamage = 10
+    if not race == 'kitsune':
+        waterDamage = 0
+    else:
+        waterDamage = -10
+    if race == 'werewolf':
+        lightDamage = 10
+    elif not race == 'voidwalker':
+        lightDamage = 0
+    else:
+        lightDamage = -10
+    if not race == 'voidwalker':
+        shadowDamage = 0
+    else:
+        shadowDamage = 10
     lifeDamage = 0
     illusionistsCloak = False
-    torch = 0
+    if not race == 'kitsune':
+        torch = 0
+    else:
+        torch = 5
     rain = 0
     luck = 0
     luck2 = 0
-    prophecy = False
+    if not race == 'voidwalker':
+        prophecy = False
+    else:
+        if R.random() <= .10:
+            prophecy = True
+        else:
+            prophecy = False
     lifesteal = 0
 
+    moonweights = (20,10,10,1)
+    fullmoonphase = ''
+
+    moonlight = 0
+    moonshadow = 0
+    moonfire = 0
+    moonwater = 0
+    moonls = 0
+    
+
+
+    requiem = False
 
     justopenedshop = False
 
@@ -217,6 +266,7 @@ def main(scale, window, weaponType,race):
     maxhealth = 100
     px, py = 200*scale, 200*scale
 
+    shattering = 0
 
     # --------------== Images ==-----------------------------------------------------------
     playerframes = []
@@ -231,7 +281,14 @@ def main(scale, window, weaponType,race):
     mapI = R.choice((1,2,3,4)) #randrange was not working right
     #print(mapI)
     mapP = BetterImage(f"resources/textures/maps/map{mapI}.png", (0, 0), scale, scale)
-    
+
+    moonframes = []
+    for i in range(12):
+        moonframes.append(BetterImage(f"resources/textures/moon/{i+1}.png", (400*scale-(32*scale), 400*scale), scale, scale))
+
+    moonframes.append(BetterImage(f"resources/textures/moon/1b.png", (400*scale-(32*scale), 400*scale), scale, scale))
+    moonframes.append(BetterImage(f"resources/textures/moon/1r.png", (400*scale-(32*scale), 400*scale), scale, scale))
+    moonframes.append(BetterImage(f"resources/textures/moon/1se.png", (400*scale-(32*scale), 400*scale), scale, scale))
     
     slashframes = []
 
@@ -269,6 +326,9 @@ def main(scale, window, weaponType,race):
 
             if justopenedshop == False:
                 justopenedshop = True
+                for requiems in EnemyHandler.pet_list:
+                    requiems.song.stop()
+                EnemyHandler.pet_list = []
                 button1.newstock(items,itemweights, 1*scale, (100*scale,200*scale))
                 button2.newstock(items,itemweights, 1*scale, (200*scale,200*scale))
                 button3.newstock(items,itemweights, 1*scale, (300*scale,200*scale))
@@ -294,18 +354,20 @@ def main(scale, window, weaponType,race):
             window.blit(wd,(10*scale,70*scale))
             sd = font.render(f'Shadow Damage: {shadowDamage}',False,(100,100,100))
             window.blit(sd,(10*scale,80*scale))
+            lightd = font.render(f'Light Damage: {lightDamage}',False,(200,200,255))
+            window.blit(lightd,(10*scale,90*scale))
             ld = font.render(f'Life Damage: {lifeDamage}',False,(0,255,0))
-            window.blit(ld,(10*scale,90*scale))
+            window.blit(ld,(10*scale,100*scale))
             ee = font.render(f'Extra Enemys: {extraenemys}',False,(155,100,0))
-            window.blit(ee,(10*scale,100*scale))
+            window.blit(ee,(10*scale,110*scale))
             ab = font.render(f'Arcane Bolts: {arcaneBolts}',False,(200,200,255))
-            window.blit(ab,(10*scale,110*scale))
+            window.blit(ab,(10*scale,120*scale))
             rt = font.render(f'Rain: {rain}',False,(50,100,255))
-            window.blit(rt,(10*scale,120*scale))
+            window.blit(rt,(10*scale,130*scale))
             tt = font.render(f'Torch: {torch}',False,(255,100,50))
-            window.blit(tt,(10*scale,130*scale))
+            window.blit(tt,(10*scale,140*scale))
             so = font.render(f'Shadow Orbs: {shadowOrbs}',False,(100,100,100))
-            window.blit(so,(10*scale,140*scale))
+            window.blit(so,(10*scale,150*scale))
 
 
             if button1.is_pressed('1') == True: 
@@ -363,6 +425,8 @@ def main(scale, window, weaponType,race):
                     if race == 'werewolf':
                         lightDamage -= 2
                         maxhealth -= 2
+                elif button1.item == 'requiem':
+                    requiem = True
                     
                 #specialInventory.append(button1.item)
                 #print(specialInventory)
@@ -373,6 +437,21 @@ def main(scale, window, weaponType,race):
                 px, py = 200*scale, 200*scale
                 playerH.health = maxhealth
                 pHandler.projectile_list = []
+
+                if requiem == True:
+                    EnemyHandler.add_pet(pet((200*scale,200*scale), scale, 0.5, 1, 0))
+
+                if moonphase != 11:
+                    moonphase += 1
+                else:
+                    fullmoonphase = R.choices(('','r','b','se'), moonweights, k=1)[0]
+                    moonphase = 0
+ 
+                if R.random() <= 0.1:
+
+                    mapI = R.choice((1,2,3,4))
+                    mapP = BetterImage(f"resources/textures/maps/map{mapI}.png", (0, 0), scale, scale)
+
                 WaveSys.newWave(EnemyHandler,extraenemys)
 
             elif button2.is_pressed('2') == True:
@@ -429,6 +508,8 @@ def main(scale, window, weaponType,race):
                     if race == 'werewolf':
                         lightDamage -= 2
                         maxhealth -= 2
+                elif button2.item == 'requiem':
+                    requiem = True
                     
                 #specialInventory.append(button2.item)
                 WaveSys.inshop = False
@@ -437,6 +518,22 @@ def main(scale, window, weaponType,race):
                 click.play()
                 px, py = 200*scale, 200*scale
                 pHandler.projectile_list = []
+                EnemyHandler.pet_list = []
+
+                if requiem == True:
+                    EnemyHandler.add_pet(pet((200*scale,200*scale), scale, 0.5, 1, 0))
+
+                if moonphase != 11:
+                    moonphase += 1
+                else:
+                    fullmoonphase = R.choices(('','r','b','se'), moonweights, k=1)[0]
+                    moonphase = 0
+
+                if R.random() <= 0.1:
+
+                    mapI = R.choice((1,2,3,4))
+                    mapP = BetterImage(f"resources/textures/maps/map{mapI}.png", (0, 0), scale, scale)
+
                 WaveSys.newWave(EnemyHandler,extraenemys)
 
             elif button3.is_pressed('3') == True:
@@ -493,6 +590,8 @@ def main(scale, window, weaponType,race):
                     if race == 'werewolf':
                         lightDamage -= 2
                         maxhealth -= 2
+                elif button3.item == 'requiem':
+                    requiem = True
 
                 #specialInventory.append(button3.item)
                 WaveSys.inshop = False
@@ -501,6 +600,22 @@ def main(scale, window, weaponType,race):
                 click.play()
                 px, py = 200*scale, 200*scale
                 pHandler.projectile_list = []
+                EnemyHandler.pet_list = []
+
+                if requiem == True:
+                    EnemyHandler.add_pet(pet((200*scale,200*scale), scale, 0.5, 1, 0))
+
+                if moonphase != 11:
+                    moonphase += 1
+                else:
+                    fullmoonphase = R.choices(('','r','b','se'), moonweights, k=1)[0]
+                    moonphase = 0
+
+                if R.random() <= 0.1:
+
+                    mapI = R.choice((1,2,3,4))
+                    mapP = BetterImage(f"resources/textures/maps/map{mapI}.png", (0, 0), scale, scale)
+
                 WaveSys.newWave(EnemyHandler,extraenemys)
             
 
@@ -600,7 +715,11 @@ def main(scale, window, weaponType,race):
             else:
                 arcaneDelay -= 1
 
-            playerframes[pFrame].centermove((px,py))
+            if not race == 'voidwalker':
+                playerframes[pFrame].centermove((px+shake[0],py+shake[1]))
+            else:
+                playerframes[pFrame].centermove((px+R.randrange(-1*scale,1*scale)+shake[0],py+shake[1]))
+                
             playerframes[pFrame].draw(window,direction)
 
             if moving:
@@ -616,7 +735,10 @@ def main(scale, window, weaponType,race):
 
 
             ax, ay = px,py-(3*scale)
-            arm.centermove((ax,ay))
+            if not race == 'voidwalker':
+                arm.centermove((ax+shake[0],ay+shake[1]))
+            else:
+                arm.centermove((ax+R.randrange(-1*scale,1*scale)+shake[0],ay+shake[1]))
             
             mx, my = pg.mouse.get_pos()
             dx = (px-(5*scale)) - mx
@@ -633,15 +755,22 @@ def main(scale, window, weaponType,race):
             handx = ax + M.cos(angle) * armlength
             handy = ay + M.sin(angle) * armlength
             
-            sword.centermove((handx, handy))
-            sword.rotate(-angledeg + 90)
+            sword.centermove((handx+shake[0], handy+shake[1]))
+
+
+            if attacking != 90:
+                sword.rotate(-angledeg-attacking+45)
+                attacking += 20
+            
+            else:
+                sword.rotate(-angledeg + 90)
             sword.draw(window)
             
-            EnemyHandler.update(window,(px,py),playerH,pHandler.projectile_list,fireDamage,pHandler,waterDamage,lightDamage,shadowDamage,shadowOrbs)
+            EnemyHandler.update(window,(px,py),playerH,pHandler.projectile_list,fireDamage,pHandler,waterDamage,lightDamage,shadowDamage,shadowOrbs,shake)
 
 
             for proj in pHandler.projectile_list:
-                if proj.type == 2:
+                if proj.type == 2 or proj.type == 8:
                     if dist(px,py,proj.x,proj.y) <= 10:
                         if illusionistsCloak == True:
                             if R.random() <= 0.10:
@@ -652,7 +781,9 @@ def main(scale, window, weaponType,race):
             if slash:
                 if not attacked:
                     attacked = True
-                    attack(window, ax, ay, -angledeg-90, EnemyHandler,scale,pHandler,EnemyHandler,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch,luck,lifesteal)
+                    if not (weaponType == 'rapier' or weaponType == 'arcanestaff' or weaponType == 'crossbow'):
+                        attacking = -90
+                    a = attack(window, ax, ay, -angledeg-90, EnemyHandler,scale,pHandler,EnemyHandler,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch,luck,lifesteal)
 
                 frame = int(s)
 
@@ -683,6 +814,14 @@ def main(scale, window, weaponType,race):
                     slash = False
                     attacked = False
 
+            if a >= 1:
+                shake = (R.randrange(-a,a),R.randrange(-a,a))
+                mapP.move(shake) 
+                a -= 1
+            else:
+                mapP.move((0,0)) 
+                shake = (0,0)
+
             playerH.update()
             #print(playerH.health)
             if playerH.dead:
@@ -692,14 +831,15 @@ def main(scale, window, weaponType,race):
             #testp.update(window,EnemyHandler,pHandler)
 
 
-            drawHud(window,scale,playerH,font,WaveSys,clock)
+            drawHud(window,scale,playerH,font,WaveSys,clock,moonphase,moonframes,fullmoonphase)
 
         pg.display.flip()
 
 
 
 def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,attackDist,maxhealth,playerH,fireDamage,attackCount,torch,luck,lifesteal): #looks familiar
-    
+    a = 0
+
     if weaponType == 'sword':
         
         for torchitem in range(torch):
@@ -716,12 +856,22 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
             sx, sy = (px + dx * (50+attackDist)*scale,py + dy * (50+attackDist)*scale)
             
             for enemy in EnemyHandler.enemy_list:
-                if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
-                    enemy.health -= 1    
-                    enemy.hit(pHandler,scale,WaveSys)
-                    if R.random() <= lifesteal:
-                        if playerH.health <= maxhealth:
-                            playerH.health += 1
+                if enemy.type == 3:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y - 90-64),(enemy.x + 10+32, enemy.y + 90-64)) or intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y + 90-64),(enemy.x + 90-64, enemy.y - 90-64))):
+                        enemy.health -= 1    
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
+                                playerH.health += 1
+                        a = 5
+                else:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y - 10+16),(enemy.x + 10+16, enemy.y + 10+16)) or intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y + 10+16),(enemy.x + 10+16, enemy.y - 10+16))):
+                        enemy.health -= 1    
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
+                                playerH.health += 1
+                        a = 5
                     
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -743,12 +893,22 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
             sx, sy = (px + dx * (80+(attackDist*2))*scale,py + dy * (80+(attackDist*2))*scale)
                     
             for enemy in EnemyHandler.enemy_list:
-                if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
-                    enemy.health -= 2
-                    enemy.hit(pHandler,scale,WaveSys)
-                    if R.random() <= lifesteal:
-                        if playerH.health <= maxhealth:
-                            playerH.health += 1
+                if enemy.type == 3:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y - 90-64),(enemy.x + 10+32, enemy.y + 90-64)) or intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y + 90-64),(enemy.x + 90-64, enemy.y - 90-64))):
+                        enemy.health -= 2
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
+                                playerH.health += 1
+                        a = 3
+                else:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y - 10+16),(enemy.x + 10+16, enemy.y + 10+16)) or intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y + 10+16),(enemy.x + 10+16, enemy.y - 10+16))):
+                        enemy.health -= 2
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
+                                playerH.health += 1
+                        a = 3
                             
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -770,12 +930,26 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
             sx, sy = (px + dx * (50+(attackDist/2))*scale,py + dy * (50+(attackDist/2))*scale)
                         
             for enemy in EnemyHandler.enemy_list:
-                if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
-                    enemy.health -= 1
-                    enemy.hit(pHandler,scale,WaveSys)
-                    if R.random() <= lifesteal:
-                        if playerH.health <= maxhealth:
+                if enemy.type == 3:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y - 90-64),(enemy.x + 10+32, enemy.y + 90-64)) or intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y + 90-64),(enemy.x + 90-64, enemy.y - 90-64))):
+                        enemy.health -= 1
+                        #pg.draw.line(window, "red", (enemy.x - 10+32, enemy.y - 90-64),(enemy.x + 10+32, enemy.y + 90-64), 5)
+                        #pg.draw.line(window, "red", (enemy.x - 10+32, enemy.y + 90-64),(enemy.x + 10+32, enemy.y - 90-64), 5)
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
                                 playerH.health += 1
+                        a = 5
+                else:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y - 10+16),(enemy.x + 10+16, enemy.y + 10+16)) or intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y + 10+16),(enemy.x + 10+16, enemy.y - 10+16))):
+                        #pg.draw.line(window, "red", (enemy.x - 10+16, enemy.y - 10+16),(enemy.x + 10+16, enemy.y + 10+16), 5)
+                        #pg.draw.line(window, "red", (enemy.x - 10+16, enemy.y + 10+16),(enemy.x + 10+16, enemy.y - 10+16), 5)
+                        enemy.health -= 1
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
+                                    playerH.health += 1
+                        a = 5
                                 
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -798,14 +972,22 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
             sx, sy = (px + dx * (80+attackDist)*scale,py + dy * (80+attackDist)*scale)
                             
             for enemy in EnemyHandler.enemy_list:
-                if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
+                if enemy.type == 3:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y - 90-64),(enemy.x + 10+32, enemy.y + 90-64)) or intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y + 90-64),(enemy.x + 90-64, enemy.y - 90-64))):
+                        enemy.health -= 5
+                        if playerH.health <= maxhealth:
+                            playerH.health += 1
+                        enemy.hit(pHandler,scale,WaveSys)
+                        a = 7
+                elif (intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y - 10+16),(enemy.x + 10+16, enemy.y + 10+16)) or intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y + 10+16),(enemy.x + 10+16, enemy.y - 10+16))):
                     enemy.health -= 5
                     if playerH.health <= maxhealth:
                         playerH.health += 1
                     enemy.hit(pHandler,scale,WaveSys)
+                    a = 7
 
                                     
-            pg.draw.line(window, "red", (px, py),(sx, sy), 2)
+            #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
 
 
 
@@ -831,12 +1013,21 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
                 pHandler.add_projectile(projectile(scale,(sx,sy),None,0,1))
                                 
             for enemy in EnemyHandler.enemy_list:
-                if (intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y - 10),(enemy.x + 10, enemy.y + 10)) or intersect((px, py), (sx, sy),(enemy.x - 10, enemy.y + 10),(enemy.x + 10, enemy.y - 10))):
+                if enemy.type == 3:
+                    if (intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y - 90-64),(enemy.x + 10+32, enemy.y + 90-64)) or intersect((px, py), (sx, sy),(enemy.x - 10+32, enemy.y + 90-64),(enemy.x + 90-64, enemy.y - 90-64))):
+                        enemy.health -= 1 + fireDamage
+                        enemy.hit(pHandler,scale,WaveSys)
+                        if R.random() <= lifesteal:
+                            if playerH.health <= maxhealth:
+                                playerH.health += 1
+                        a = 5
+                elif (intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y - 10+16),(enemy.x + 10+16, enemy.y + 10+16)) or intersect((px, py), (sx, sy),(enemy.x - 10+16, enemy.y + 10+16),(enemy.x + 10+16, enemy.y - 10+16))):
                     enemy.health -= 1 + fireDamage
                     enemy.hit(pHandler,scale,WaveSys)
                     if R.random() <= lifesteal:
                         if playerH.health <= maxhealth:
                             playerH.health += 1
+                    a = 5
                                         
             #pg.draw.line(window, "red", (px, py),(sx, sy), 2)
             
@@ -853,6 +1044,8 @@ def attack(window, px, py, pa, EnemyHandler,scale,pHandler,WaveSys,weaponType,at
         for torchitem in range(torch):
             if R.random() < 0.25:
                 pHandler.add_projectile(projectile(scale,(px,py),None,(-pa+90)+R.randrange(-45,45),4))
+                
+    return a
 
 
 
@@ -906,7 +1099,7 @@ class shopButton:
 
 
 
-def drawHud(window,scale,player,font,wave,clock):
+def drawHud(window,scale,player,font,wave,clock,moonphase,moonf,fullmoonphase):
 
                                 #[x,y,w,h]
     pg.draw.rect(window, (0,0,0), [0, 400*scale, 400*scale, 50], 0)
@@ -918,6 +1111,20 @@ def drawHud(window,scale,player,font,wave,clock):
     fpsT = font.render(f'{round(clock.get_fps())}',False,(255,0,255))
     window.blit(fpsT,(200*scale,410*scale))
 
+    
+    if moonphase == 0:
+        if fullmoonphase == 'r':
+            moonf[12].draw(window)
+        elif fullmoonphase == 'b':
+            moonf[13].draw(window)
+        elif fullmoonphase == 'se':
+            moonf[14].draw(window)
+        else:
+            moonf[0].draw(window)
+    else:
+        moonf[moonphase].draw(window)
+        
+    #print(str(fullmoonphase)+''+str(moonphase))
 
 
 

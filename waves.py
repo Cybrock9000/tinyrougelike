@@ -1,10 +1,11 @@
 from enemys import *
 import random as R
+from pets import *
 
 
 class Wavesystem:
     def __init__(self, scale):
-        self.wave = 2 # it starts on 2 because if its 1 then the whole game breaks, idk why
+        self.wave = 2# it starts on 2 because if its 1 then the whole game breaks, idk why
         self.scale = scale
         self.inshop = False
 
@@ -28,12 +29,14 @@ class Wavesystem:
         pos = (R.randrange(0, 400) * self.scale,R.randrange(0, 400) * self.scale,)
 
         if boss == True:
-            EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (5+(1.125*self.wave)), 0))
+            EnemyHandler.add_enemy(enemy(pos, self.scale, 0.25, (20+(1.125*self.wave)), 3))
         else:
-            etype = R.choice((0,1,2))
-            if self.wave > 10 and etype == 2:
-                EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (5+(1.125*self.wave)), 2))
-            elif self.wave > 5 and etype == 1:
+            etype = R.choice((0,1,2,3))
+            if self.wave > 25 and etype == 3:
+                EnemyHandler.add_enemy(enemy(pos, self.scale, 0.75, (5+(1.125*self.wave)), 4))
+            elif self.wave > 11 and etype == 2:
+                EnemyHandler.add_enemy(enemy(pos, self.scale, 0, (5+(1.125*self.wave)), 2))
+            elif self.wave > 6 and etype == 1:
                 EnemyHandler.add_enemy(enemy(pos, self.scale, 1, (10+(1.125*self.wave)), 1))
             else:
                 EnemyHandler.add_enemy(enemy(pos, self.scale, 0.5, (10+(1.125*self.wave))))

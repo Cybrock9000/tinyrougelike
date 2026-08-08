@@ -24,11 +24,16 @@ class partical:
                 self.image = BetterImage("resources/textures/particals/FSblood2.png", (self.x, self.y), scale, scale)
             else:
                 self.image = BetterImage("resources/textures/particals/FSblood.png", (self.x, self.y), scale, scale)
-        if type == 2:
+        if type == 2 or type == 3:
             if len(enemys.enemy_list) >= 25:
                 self.image = BetterImage("resources/textures/particals/shadowbits2.png", (self.x, self.y), scale, scale)
             else:
                 self.image = BetterImage("resources/textures/particals/shadowbits.png", (self.x, self.y), scale, scale)
+        if type == 4:
+            if len(enemys.enemy_list) >= 25:
+                self.image = BetterImage("resources/textures/particals/rockpebbles2.png", (self.x, self.y), scale, scale)
+            else:
+                self.image = BetterImage("resources/textures/particals/rockpebbles.png", (self.x, self.y), scale, scale)
 
 
 

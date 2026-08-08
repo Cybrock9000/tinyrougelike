@@ -15,7 +15,7 @@ class projectile:
         self.remove = False
         if self.type == 0 or self.type == 5 or self.type == 7:
             self.lifespan = 60 #1 sec
-        elif self.type == 1 or self.type == 3 or self.type == 4:
+        elif self.type == 1 or self.type == 3 or self.type == 4 or self.type == 8:
             self.lifespan = 120 #2 sec
         elif self.type == 2:
             self.lifespan = 260 #4 sec
@@ -63,6 +63,12 @@ class projectile:
             self.angle = R.randrange(0,360)
             self.speed = 2*scale
 
+        elif self.type == 8: # boss shadow
+            self.image = BetterImage("resources/textures/projectiles/Eshadow.png", (self.x, self.y), scale, scale)
+                    
+            self.angle = R.randrange(0,360)
+            self.speed = 2*scale
+
 
     def update(self,window,EnemyHandler,pHandler,WaveSys):
         if self.lifespan < 0:
@@ -73,7 +79,7 @@ class projectile:
              self.lifespan -= 1
             
         self.draw(window)
-        if self.type == 0 or self.type == 2 or self.type == 3 or self.type == 4 or self.type == 5 or self.type == 7:
+        if self.type == 0 or self.type == 2 or self.type == 3 or self.type == 4 or self.type == 5 or self.type == 7 or self.type == 8:
             self.move(EnemyHandler,pHandler,WaveSys,self.type)
         elif self.type == 1:
             self.angle = R.randrange(0,360)
